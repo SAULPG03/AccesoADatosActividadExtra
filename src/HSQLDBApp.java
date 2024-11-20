@@ -12,7 +12,7 @@ public class HSQLDBApp {
         Scanner scanner = new Scanner(System.in);
 
         try (Connection conn = conexion.getConexion()) {
-            System.out.println("Conexión exitosa a HSQLDB!");
+            System.out.println("Conexion exitosa a HSQLDB!");
 
             int opcion;
             do {
@@ -40,10 +40,10 @@ public class HSQLDBApp {
                         mostrarAlumnosPorAsignatura(conn, scanner);
                         break;
                     case 0:
-                        System.out.println("Saliendo del programa...");
+                        System.out.println("Te has salido.");
                         break;
                     default:
-                        System.out.println("Opción no válida. Intente nuevamente.");
+                        System.out.println("Opción no valida. Intente nuevamente.");
                         break;
                 }
             } while (opcion != 0);
@@ -56,9 +56,9 @@ public class HSQLDBApp {
     private static void mostrarAlumnos(Connection conn) {
         String pregunta = "SELECT * FROM PUBLIC.ALUMNO";
         try (Statement llamada = conn.createStatement(); ResultSet rs = llamada.executeQuery(pregunta)) {
-            System.out.println("\n--- Datos de los Alumnos ---");
+            System.out.println("\nDatos de los Alumnos");
             while (rs.next()) {
-                System.out.printf("DNI: %s, Nombre: %s, Apellidos: %s, Dirección: %s, Teléfono: %d, Nota: %s\n",
+                System.out.printf("DNI: %s, Nombre: %s, Apellidos: %s, Direccion: %s, Telefono: %d, Nota: %s\n",
                         rs.getString("dni"), rs.getString("nombre"), rs.getString("apellidos"),
                         rs.getString("dirección"), rs.getInt("tfno"), rs.getString("nota_expediente"));
             }
@@ -70,9 +70,9 @@ public class HSQLDBApp {
     private static void mostrarProfesores(Connection conn) {
         String pregunta = "SELECT * FROM PUBLIC.PROFESOR";
         try (Statement llamada = conn.createStatement(); ResultSet rs = llamada.executeQuery(pregunta)) {
-            System.out.println("\n--- Datos de los Profesores ---");
+            System.out.println("\nDatos de los Profesores");
             while (rs.next()) {
-                System.out.printf("DNI: %s, Nombre: %s, Apellidos: %s, Titulación: %s\n",
+                System.out.printf("DNI: %s, Nombre: %s, Apellidos: %s, Titulacion: %s\n",
                         rs.getString("dni_prof"), rs.getString("nombre"), rs.getString("apellidos"),
                         rs.getString("titulacion"));
             }
@@ -92,7 +92,7 @@ public class HSQLDBApp {
             try (ResultSet rs = llamada.executeQuery()) {
                 System.out.println("\nAsignaturas Impartidas");
                 while (rs.next()) {
-                    System.out.printf("Código: %d, Nombre: %s\n",
+                    System.out.printf("Codigo: %d, Nombre: %s\n",
                             rs.getInt("cod_asig"), rs.getString("nombre"));
                 }
             }
@@ -102,7 +102,7 @@ public class HSQLDBApp {
     }
 
     private static void mostrarAlumnosPorAsignatura(Connection conn, Scanner scanner) {
-        System.out.print("Ingrese el código de la asignatura: ");
+        System.out.print("Ingrese el codigo de la asignatura: ");
         int codAsig = scanner.nextInt();
         String pregunta = "SELECT asignatura.dni, asignatura.nombre, asignatura.apellidos FROM PUBLIC.ALUMNO asignatura " +
                 "JOIN PUBLIC.MATRICULA matricula ON asignatura.dni = matricula.dni " +
@@ -110,7 +110,7 @@ public class HSQLDBApp {
         try (PreparedStatement llamada = conn.prepareStatement(pregunta)) {
             llamada.setInt(1, codAsig);
             try (ResultSet rs = llamada.executeQuery()) {
-                System.out.println("\n--- Alumnos Matriculados ---");
+                System.out.println("\nAlumnos Matriculados");
                 while (rs.next()) {
                     System.out.printf("DNI: %s, Nombre: %s, Apellidos: %s\n",
                             rs.getString("dni"), rs.getString("nombre"), rs.getString("apellidos"));
