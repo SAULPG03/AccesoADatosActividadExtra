@@ -16,23 +16,35 @@ public class HSQLDBApp {
 
             int opcion;
             do {
-                System.out.println("\n--- Menú de opciones ---");
+                System.out.println("\nMenu");
                 System.out.println("1. Mostrar todos los datos de los alumnos.");
                 System.out.println("2. Mostrar todos los datos de los profesores.");
                 System.out.println("3. Mostrar las asignaturas impartidas por un profesor.");
                 System.out.println("4. Mostrar los alumnos matriculados en una asignatura.");
                 System.out.println("0. Salir.");
-                System.out.print("Seleccione una opción: ");
+                System.out.print("Seleccione una opcion: ");
                 opcion = scanner.nextInt();
-                scanner.nextLine(); // Consumir la nueva línea
+                scanner.nextLine();
 
                 switch (opcion) {
-                    case 1 -> mostrarAlumnos(conn);
-                    case 2 -> mostrarProfesores(conn);
-                    case 3 -> mostrarAsignaturasPorProfesor(conn, scanner);
-                    case 4 -> mostrarAlumnosPorAsignatura(conn, scanner);
-                    case 0 -> System.out.println("Saliendo del programa...");
-                    default -> System.out.println("Opción no válida. Intente nuevamente.");
+                    case 1:
+                        mostrarAlumnos(conn);
+                        break;
+                    case 2:
+                        mostrarProfesores(conn);
+                        break;
+                    case 3:
+                        mostrarAsignaturasPorProfesor(conn, scanner);
+                        break;
+                    case 4: 
+                        mostrarAlumnosPorAsignatura(conn, scanner);
+                        break;
+                    case 0:
+                        System.out.println("Saliendo del programa...");
+                        break;
+                    default:
+                        System.out.println("Opción no válida. Intente nuevamente.");
+                        break;
                 }
             } while (opcion != 0);
 
@@ -42,12 +54,13 @@ public class HSQLDBApp {
     }
 
     private static void mostrarAlumnos(Connection conn) {
-        String query = "SELECT * FROM alumnos";
-        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
+        String pregunta = "SELECT * FROM PUBLIC.ALUMNO";
+        try (Statement llamada = conn.createStatement(); ResultSet rs = llamada.executeQuery(pregunta)) {
             System.out.println("\n--- Datos de los Alumnos ---");
             while (rs.next()) {
-                System.out.printf("DNI: %s, Nombre: %s, Apellidos: %s\n",
-                        rs.getString("dni"), rs.getString("nombre"), rs.getString("apellidos"));
+                System.out.printf("DNI: %s, Nombre: %s, Apellidos: %s, Dirección: %s, Teléfono: %d, Nota: %s\n",
+                        rs.getString("dni"), rs.getString("nombre"), rs.getString("apellidos"),
+                        rs.getString("dirección"), rs.getInt("tfno"), rs.getString("nota_expediente"));
             }
         } catch (SQLException e) {
             System.err.println("Error al mostrar los datos de los alumnos: " + e.getMessage());
@@ -55,12 +68,13 @@ public class HSQLDBApp {
     }
 
     private static void mostrarProfesores(Connection conn) {
-        String query = "SELECT * FROM profesores";
-        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
+        String pregunta = "SELECT * FROM PUBLIC.PROFESOR";
+        try (Statement llamada = conn.createStatement(); ResultSet rs = llamada.executeQuery(pregunta)) {
             System.out.println("\n--- Datos de los Profesores ---");
             while (rs.next()) {
-                System.out.printf("DNI: %s, Nombre: %s, Apellidos: %s\n",
-                        rs.getString("dni"), rs.getString("nombre"), rs.getString("apellidos"));
+                System.out.printf("DNI: %s, Nombre: %s, Apellidos: %s, Titulación: %s\n",
+                        rs.getString("dni_prof"), rs.getString("nombre"), rs.getString("apellidos"),
+                        rs.getString("titulacion"));
             }
         } catch (SQLException e) {
             System.err.println("Error al mostrar los datos de los profesores: " + e.getMessage());
@@ -68,46 +82,42 @@ public class HSQLDBApp {
     }
 
     private static void mostrarAsignaturasPorProfesor(Connection conn, Scanner scanner) {
-        System.out.print("\nIngrese el DNI del profesor: ");
-        String dni = scanner.nextLine();
-
-        String query = "SELECT asignaturas.codigo, asignaturas.nombre " +
-                "FROM asignaturas " +
-                "INNER JOIN profesores_asignaturas ON asignaturas.codigo = profesores_asignaturas.codigo_asignatura " +
-                "WHERE profesores_asignaturas.dni_profesor = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
-            pstmt.setString(1, dni);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                System.out.println("\n--- Asignaturas impartidas por el profesor ---");
+        System.out.print("Ingrese el DNI del profesor: ");
+        String dni = scanner.next();
+        String pregunta = "SELECT asignatura.cod_asig, asignatura.nombre FROM PUBLIC.ASIGNATURA asignatura " +
+                "JOIN PUBLIC.IMPARTE imparte ON asignatura.cod_asig = imparte.cod_asig " +
+                "WHERE imparte.dni_prof = ?";
+        try (PreparedStatement llamada = conn.prepareStatement(pregunta)) {
+            llamada.setString(1, dni);
+            try (ResultSet rs = llamada.executeQuery()) {
+                System.out.println("\nAsignaturas Impartidas");
                 while (rs.next()) {
-                    System.out.printf("Código: %s, Nombre: %s\n",
-                            rs.getString("codigo"), rs.getString("nombre"));
+                    System.out.printf("Código: %d, Nombre: %s\n",
+                            rs.getInt("cod_asig"), rs.getString("nombre"));
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error al mostrar las asignaturas del profesor: " + e.getMessage());
+            System.err.println("Error al mostrar las asignaturas: " + e.getMessage());
         }
     }
 
     private static void mostrarAlumnosPorAsignatura(Connection conn, Scanner scanner) {
-        System.out.print("\nIngrese el código de la asignatura: ");
-        String codigo = scanner.nextLine();
-
-        String query = "SELECT alumnos.dni, alumnos.nombre, alumnos.apellidos " +
-                "FROM alumnos " +
-                "INNER JOIN alumnos_asignaturas ON alumnos.dni = alumnos_asignaturas.dni_alumno " +
-                "WHERE alumnos_asignaturas.codigo_asignatura = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
-            pstmt.setString(1, codigo);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                System.out.println("\n--- Alumnos matriculados en la asignatura ---");
+        System.out.print("Ingrese el código de la asignatura: ");
+        int codAsig = scanner.nextInt();
+        String pregunta = "SELECT asignatura.dni, asignatura.nombre, asignatura.apellidos FROM PUBLIC.ALUMNO asignatura " +
+                "JOIN PUBLIC.MATRICULA matricula ON asignatura.dni = matricula.dni " +
+                "WHERE matricula.cod_asig = ?";
+        try (PreparedStatement llamada = conn.prepareStatement(pregunta)) {
+            llamada.setInt(1, codAsig);
+            try (ResultSet rs = llamada.executeQuery()) {
+                System.out.println("\n--- Alumnos Matriculados ---");
                 while (rs.next()) {
                     System.out.printf("DNI: %s, Nombre: %s, Apellidos: %s\n",
                             rs.getString("dni"), rs.getString("nombre"), rs.getString("apellidos"));
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error al mostrar los alumnos matriculados: " + e.getMessage());
+            System.err.println("Error al mostrar los alumnos: " + e.getMessage());
         }
     }
 }
