@@ -60,7 +60,7 @@ public class HSQLDBApp {
             while (rs.next()) {
                 System.out.printf("DNI: %s, Nombre: %s, Apellidos: %s, Direccion: %s, Telefono: %d, Nota: %s\n",
                         rs.getString("dni"), rs.getString("nombre"), rs.getString("apellidos"),
-                        rs.getString("dirección"), rs.getInt("tfno"), rs.getString("nota_expediente"));
+                        rs.getString("dirección"), rs.getInt("telefono"), rs.getString("nota_expediente"));
             }
         } catch (SQLException e) {
             System.err.println("Error al mostrar los datos de los alumnos: " + e.getMessage());
